@@ -1,0 +1,155 @@
+<!--To Do-->
+<!--13. sayfa gösterilmemeli-->
+<!--Her sayfada o aya ait satırlar gösterilmeli-->
+<!--Pagenumber azaldığında rownum değişmeme sorunu çözülecek-->
+<!--Ayın günleri doğru gösterilidikten sonra temel takvim özellikleri eklenecek-->
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Your page title</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/free-jqgrid/4.15.5/css/ui.jqgrid.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.4/themes/redmond/jquery-ui.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.2/dist/sweetalert2.min.css">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script>var $ = jQuery.noConflict(false);</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/free-jqgrid/4.15.5/jquery.jqgrid.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.2/dist/sweetalert2.all.min.js"></script>
+
+</head>
+
+<body>
+
+
+    <div id="container" style="position: relative;">
+        <button id ="addNewButton" onclick="onClickNewAdd()">Add New</button>
+        <input type="text" id="mySearchBox"  placeholder="Arama..." class="searchBar" style="position: absolute; top: 0; margin-left: 630px;">
+
+        <table id="jqGrid"></table>
+        <div id="jqGridPager"></div>
+    </div>
+
+   
+
+    <script  type="text/javascript">
+        var grid = $("#jqGrid");
+        var date = new Date();
+        var year = date.getFullYear();
+        var firstDay = new Date(year, 0, 1).getDay();
+        var lastDay = new Date(year, 11, 31).getDay();
+        var lastDate = new Date(year, 11, 31).getDate();
+        var mydata = [];
+        var weekdays = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
+        var monthNames = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+        var rowNums = [];
+        for (var month = 0; month < 12; month++) {
+            var monthData = [];
+            var firstDayOfMonth = new Date(year, month, 1).getDay();
+            if (firstDayOfMonth === 0) {
+                firstDayOfMonth = 7;
+            }
+            firstDayOfMonth--;
+            var lastDateOfMonth = new Date(year, month + 1, 0).getDate();
+            var day = 1;
+
+            for (var i = 0; i < 6; i++) {
+                var row = { ay: monthNames[month], hafta: i + 1 };
+                for (var j = 0; j < weekdays.length; j++) {
+                    if (i === 0 && j < firstDayOfMonth) {
+                        row[weekdays[j]] = '';
+                    } 
+                    
+                    else if (day > lastDateOfMonth) {
+                        row[weekdays[j]] = '';
+                    } 
+                    
+                    else {
+                        row[weekdays[j]] = day;
+                        day++;
+                    }
+                }
+                monthData.push(row);
+                if (day > lastDateOfMonth) {
+                    rowNums.push(monthData.length);
+                    break;
+                }
+            }
+            mydata = mydata.concat(monthData);
+        }
+     
+$("#jqGrid").jqGrid({
+  data: mydata,
+  datatype: "local",
+  colModel: [
+    { label: 'Pzt', name: 'Pzt', width: 50 },
+    { label: 'Sal', name: 'Sal', width: 50 },
+    { label: 'Çar', name: 'Çar', width: 50 },
+    { label: 'Per', name: 'Per', width: 50 },
+    { label: 'Cum', name: 'Cum', width: 50 },
+    { label: 'Cmt', name: 'Cmt', width: 50 },
+    { label: 'Paz', name: 'Paz', width: 50 }
+  ],
+  width: 900,
+  height: 250,
+  rowNum: rowNums[0],
+  pager: '#jqGridPager',
+  viewrecords: true,
+  beforeSelectRow: function (rowid, e) {
+    var $td = $(e.target).closest("td"),
+        iCol = $.jgrid.getCellIndex($td[0]),
+        p = $(this).jqGrid("getGridParam"), // object with all parameters
+        cm = p.colModel[iCol],
+        key = rowid + "_" + cm.name,
+        id = $.jgrid.stripPref(p.idPrefix, rowid);
+
+    if (p.mySelection[key] === undefined || !$td.hasClass("ui-state-highlight")) {
+        $td.addClass("ui-state-highlight").attr("aria-selected", "true");
+        p.mySelection[key] = {
+            id: id,
+            colName: cm.name,
+            indexOfColumn: iCol,
+            htmlValue: $td.html(),
+            value: $.unformat.call(this, $td[0], {rowId: rowid, colModel: cm}, iCol)
+        };
+    } else {
+        $td.removeClass("ui-state-highlight").removeAttr("aria-selected");
+        delete p.mySelection[key];
+    }
+
+    // if the grid has onCellSelect we call it because returning false
+    // from beforeSelectRow will prevent the standard processing
+    if($.isFunction(p.onCellSelect)) {
+        p.onCellSelect.call(this, rowid, iCol, $td.html(), e);
+    }
+
+    return false; // swich of the standard selection
+},
+  cellselect: true,
+  loadonce:true,
+  caption: "başlık",
+      loadComplete: function(data) {
+          myCapt();
+      },
+      onPaging: myCapt
+    });
+
+    function myCapt(){
+         var currentPage = grid.jqGrid("getGridParam", "page");
+         debugger;
+          grid.jqGrid("setCaption", monthNames[currentPage-1] + ' ' + year + ' Takvimi');
+        debugger;
+         grid.setGridParam({rowNum:rowNums[currentPage]});
+         debugger;
+       
+    }
+    </script>
+</body>
+
+</html>
