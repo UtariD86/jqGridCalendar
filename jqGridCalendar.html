@@ -84,71 +84,36 @@
             mydata = mydata.concat(monthData);
         }
      
-$("#jqGrid").jqGrid({
-  data: mydata,
-  datatype: "local",
-  colModel: [
-    { label: 'Pzt', name: 'Pzt', width: 50 },
-    { label: 'Sal', name: 'Sal', width: 50 },
-    { label: 'Çar', name: 'Çar', width: 50 },
-    { label: 'Per', name: 'Per', width: 50 },
-    { label: 'Cum', name: 'Cum', width: 50 },
-    { label: 'Cmt', name: 'Cmt', width: 50 },
-    { label: 'Paz', name: 'Paz', width: 50 }
-  ],
-  width: 900,
-  height: 250,
-  rowNum: rowNums[0],
-  pager: '#jqGridPager',
-  viewrecords: true,
-  beforeSelectRow: function (rowid, e) {
-    var $td = $(e.target).closest("td"),
-        iCol = $.jgrid.getCellIndex($td[0]),
-        p = $(this).jqGrid("getGridParam"), // object with all parameters
-        cm = p.colModel[iCol],
-        key = rowid + "_" + cm.name,
-        id = $.jgrid.stripPref(p.idPrefix, rowid);
+		$("#jqGrid").jqGrid({
+			data: mydata,
+			datatype: "local",
+			colModel: [
+				{ label: 'Pzt', name: 'Pzt', width: 50 },
+				{ label: 'Sal', name: 'Sal', width: 50 },
+				{ label: 'Çar', name: 'Çar', width: 50 },
+				{ label: 'Per', name: 'Per', width: 50 },
+				{ label: 'Cum', name: 'Cum', width: 50 },
+				{ label: 'Cmt', name: 'Cmt', width: 50 },
+				{ label: 'Paz', name: 'Paz', width: 50 }
+			],
+			width: 900,
+			height: 250,
+			rowNum: rowNums[0],
+			pager: '#jqGridPager',
+			viewrecords: true,
+			loadonce:true,
+			caption: "başlık",
+			loadComplete: function(data) {
+				myCapt();
+			},
+			onPaging: myCapt
+		});
 
-    if (p.mySelection[key] === undefined || !$td.hasClass("ui-state-highlight")) {
-        $td.addClass("ui-state-highlight").attr("aria-selected", "true");
-        p.mySelection[key] = {
-            id: id,
-            colName: cm.name,
-            indexOfColumn: iCol,
-            htmlValue: $td.html(),
-            value: $.unformat.call(this, $td[0], {rowId: rowid, colModel: cm}, iCol)
-        };
-    } else {
-        $td.removeClass("ui-state-highlight").removeAttr("aria-selected");
-        delete p.mySelection[key];
-    }
-
-    // if the grid has onCellSelect we call it because returning false
-    // from beforeSelectRow will prevent the standard processing
-    if($.isFunction(p.onCellSelect)) {
-        p.onCellSelect.call(this, rowid, iCol, $td.html(), e);
-    }
-
-    return false; // swich of the standard selection
-},
-  cellselect: true,
-  loadonce:true,
-  caption: "başlık",
-      loadComplete: function(data) {
-          myCapt();
-      },
-      onPaging: myCapt
-    });
-
-    function myCapt(){
-         var currentPage = grid.jqGrid("getGridParam", "page");
-         debugger;
-          grid.jqGrid("setCaption", monthNames[currentPage-1] + ' ' + year + ' Takvimi');
-        debugger;
-         grid.setGridParam({rowNum:rowNums[currentPage]});
-         debugger;
-       
-    }
+		function myCapt(){
+			var currentPage = grid.jqGrid("getGridParam", "page");
+			grid.jqGrid("setCaption", monthNames[currentPage-1] + ' ' + year + ' Takvimi');
+			grid.setGridParam({rowNum:rowNums[currentPage]});
+		}
     </script>
 </body>
 
